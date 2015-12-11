@@ -15,8 +15,8 @@ if( ! file_exists( $file ) )
 	) );
 
 
-$new_file = preg_replace( '~.js$~i', '.min.js', $file );
-if( $file === $new_file )
+$min_js_file = preg_replace( '~.js$~i', '.min.js', $file );
+if( $file === $min_js_file )
 	returnAjaxResponse( array(
 		'status' => 'ERROR',
 		'message' => 'Either bad file format (not .js), or file is already minified, and thus it will not be replaced.'
@@ -24,10 +24,10 @@ if( $file === $new_file )
 
 
 
-$last_modified = empty($_REQUEST['last_modified']) ? '0' : $_REQUEST['last_modified'];
+$min_js_last_modified = file_exists($min_js_file) ? filemtime($min_js_file) : 0;
 
-if( filemtime($file) > $last_modified ){
-	minifyJSFile( $file, $new_file );
+if( filemtime($file) > $min_js_last_modified ){
+	minifyJSFile( $file, $min_js_file );
 }else{
 	returnAjaxResponse( array(
 		'status' => 'OK',
@@ -45,7 +45,7 @@ function returnAjaxResponse( $arr = array() ){
 	exit;
 }
 
-function minifyJSFile( $file, $new_file ){
+function minifyJSFile( $file, $min_js_file ){
 	$min_js_code = getRemoteMinifiedResponse( $file );
 	if( $min_js_code === false ) returnAjaxResponse( array(
 			'status' => 'ERROR',
@@ -53,7 +53,7 @@ function minifyJSFile( $file, $new_file ){
 		) );
 
 
-	$save = file_put_contents( $new_file, $min_js_code );
+	$save = file_put_contents( $min_js_file, $min_js_code );
 
 	if( $save === false ){
 		returnAjaxResponse( array(
@@ -64,7 +64,6 @@ function minifyJSFile( $file, $new_file ){
 		returnAjaxResponse( array(
 			'status' => 'OK',
 			'operation' => 'MODIFIED',
-			'last_modified' => filemtime($file)
 		) );
 	}
 
